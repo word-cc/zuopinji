@@ -1,19 +1,23 @@
-﻿import React, { useEffect, useRef } from 'react'
+﻿import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
 import MagicBentoEffect from './MagicBentoEffect.jsx'
-import heroCartoon from './assets/hero-cartoon.png'
-import profilePhoto from '../gerenzhaopian.jpg'
-import dronersVideo from '../droners_cut.mp4'
-import totallySpiesVideo from '../TC_cut.mp4'
-import imagoVideo from '../Imago_cut.mp4'
-import momoVideo from '../momo_cut.mp4'
-import aiDemoVideo from '../AIdemo.mp4'
-import gameAnimationVideo from '../game_AN.mp4'
-import zzmd1Image from '../zzmd.jpg'
-import zzmd2Image from '../zzmd2.jpg'
-import zzmd3Image from '../zzmd3.jpg'
-import zzmd4Image from '../zzmd4.jpg'
+import heroCartoon from './assets/hero-cartoon.webp'
+import profilePhoto from '../tupian/gerenzhaopian.jpg'
+import dronersVideo from '../shiping/droners_cut.mp4'
+import totallySpiesVideo from '../shiping/TC_cut.mp4'
+import imagoVideo from '../shiping/Imago_cut.mp4'
+import momoVideo from '../shiping/momo_cut.mp4'
+import aiDemoVideo from '../shiping/AIdemo.mp4'
+import gameAnimationVideo from '../shiping/game_AN.mp4'
+import zzmd1Image from '../tupian/zzmd.jpg'
+import zzmd2Image from '../tupian/zzmd2.jpg'
+import zzmd3Image from '../tupian/zzmd3.jpg'
+import zzmd4Image from '../tupian/zzmd4.jpg'
+import zzmd1Thumb from './assets/zzmd-thumb.webp'
+import zzmd2Thumb from './assets/zzmd2-thumb.webp'
+import zzmd3Thumb from './assets/zzmd3-thumb.webp'
+import zzmd4Thumb from './assets/zzmd4-thumb.webp'
 
 const text = {
   navResume: '\u7b80\u5386',
@@ -115,10 +119,10 @@ const strengths = [
 ]
 
 const resultImages = [
-  { src: zzmd1Image, alt: '\u9879\u76ee\u6210\u679c 01' },
-  { src: zzmd2Image, alt: '\u9879\u76ee\u6210\u679c 02' },
-  { src: zzmd3Image, alt: '\u9879\u76ee\u6210\u679c 03' },
-  { src: zzmd4Image, alt: '\u9879\u76ee\u6210\u679c 04' },
+  { src: zzmd1Image, thumb: zzmd1Thumb, alt: '\u9879\u76ee\u6210\u679c 01' },
+  { src: zzmd2Image, thumb: zzmd2Thumb, alt: '\u9879\u76ee\u6210\u679c 02' },
+  { src: zzmd3Image, thumb: zzmd3Thumb, alt: '\u9879\u76ee\u6210\u679c 03' },
+  { src: zzmd4Image, thumb: zzmd4Thumb, alt: '\u9879\u76ee\u6210\u679c 04' },
 ]
 
 const skills = ['TB Harmony', 'Adobe Animate', 'Moho', 'Spine', 'After Effects', 'Premiere']
@@ -138,6 +142,7 @@ function HeroVideo() {
     const context = canvas.getContext('2d')
     let frame = 0
     let rafId = 0
+    let isVisible = true
 
     const resize = () => {
       const ratio = window.devicePixelRatio || 1
@@ -146,7 +151,7 @@ function HeroVideo() {
       context.setTransform(ratio, 0, 0, ratio, 0, 0)
     }
 
-    const draw = () => {
+    const drawFrame = () => {
       const width = canvas.clientWidth
       const height = canvas.clientHeight
       context.clearRect(0, 0, width, height)
@@ -163,22 +168,100 @@ function HeroVideo() {
       }
 
       frame += 1
+    }
+
+    const draw = () => {
+      if (!isVisible || document.hidden) {
+        rafId = 0
+        return
+      }
+
+      drawFrame()
       rafId = requestAnimationFrame(draw)
     }
 
+    const start = () => {
+      if (!rafId && isVisible && !document.hidden) {
+        rafId = requestAnimationFrame(draw)
+      }
+    }
+
+    const stop = () => {
+      if (rafId) cancelAnimationFrame(rafId)
+      rafId = 0
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) stop()
+      else start()
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting
+        if (isVisible) start()
+        else stop()
+      },
+      { threshold: 0.01 },
+    )
+
     resize()
+    drawFrame()
+    observer.observe(canvas)
     window.addEventListener('resize', resize)
-    draw()
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    start()
 
     return () => {
       window.removeEventListener('resize', resize)
-      cancelAnimationFrame(rafId)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      observer.disconnect()
+      stop()
     }
   }, [])
 
   return <canvas ref={canvasRef} className="hero-video" aria-hidden="true" />
 }
+function LazyProjectVideo({ src, title }) {
+  const videoRef = useRef(null)
+  const [shouldLoad, setShouldLoad] = useState(false)
 
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || shouldLoad) return undefined
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        setShouldLoad(true)
+        observer.disconnect()
+      },
+      { rootMargin: '650px 0px', threshold: 0.01 },
+    )
+
+    observer.observe(video)
+    return () => observer.disconnect()
+  }, [shouldLoad])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (shouldLoad && video) video.load()
+  }, [shouldLoad, src])
+
+  return (
+    <video
+      ref={videoRef}
+      className="project-video"
+      src={shouldLoad ? src : undefined}
+      controls
+      muted
+      loop
+      playsInline
+      preload={shouldLoad ? "metadata" : "none"}
+      aria-label={title}
+    />
+  )
+}
 function ProjectCard({ project, index }) {
   return (
     <article className={`project-card ${project.accent}`}>
@@ -191,7 +274,7 @@ function ProjectCard({ project, index }) {
       </div>
       <div className="project-media">
         {project.video ? (
-          <video className="project-video" src={project.video} controls muted loop playsInline preload="metadata" />
+          <LazyProjectVideo src={project.video} title={project.title} />
         ) : (
           <>
             <div className="stage-lines">
@@ -220,8 +303,8 @@ function App() {
     <main>
       <MagicBentoEffect />
       <section className="hero" id="top">
-        <img className="hero-bg hero-bg-blur" src={heroCartoon} alt="" aria-hidden="true" />
-        <img className="hero-bg hero-bg-clear" src={heroCartoon} alt="" aria-hidden="true" />
+        <img className="hero-bg hero-bg-blur" src={heroCartoon} alt="" aria-hidden="true" decoding="async" fetchPriority="high" />
+        <img className="hero-bg hero-bg-clear" src={heroCartoon} alt="" aria-hidden="true" decoding="async" fetchPriority="high" />
         <div className="hero-shade" />
         <HeroVideo />
         <nav className="nav" aria-label="Main navigation">
@@ -253,7 +336,7 @@ function App() {
         </div>
         <div className="resume-grid">
           <div className="portrait-card portrait-photo-card" aria-label={text.portraitLabel}>
-            <img className="profile-photo" src={profilePhoto} alt="杨宇辰个人照片" />
+            <img className="profile-photo" src={profilePhoto} alt="杨宇辰个人照片" loading="lazy" decoding="async" />
           </div>
           <div className="resume-copy resume-board">
               <div className="resume-intro-block">
@@ -331,7 +414,7 @@ function App() {
           <div className="result-gallery">
             {resultImages.map((image, index) => (
               <a href={image.src} target="_blank" rel="noreferrer" className="result-thumb" key={image.alt} aria-label={`放大查看项目成果 ${index + 1}`}>
-                <img src={image.src} alt={image.alt} />
+                <img src={image.thumb} alt={image.alt} loading="lazy" decoding="async" />
               </a>
             ))}
           </div>
@@ -359,6 +442,12 @@ function App() {
 }
 
 createRoot(document.getElementById('root')).render(<App />)
+
+
+
+
+
+
 
 
 

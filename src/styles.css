@@ -737,7 +737,7 @@ a {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image: url('./assets/hero-cartoon.png');
+  background-image: url('./assets/hero-cartoon.webp');
   background-size: cover;
   background-position: right center;
   opacity: 0.1;
@@ -868,7 +868,7 @@ a {
 
 .closing::after {
   z-index: -2;
-  background-image: url('./assets/closing-cartoon.png');
+  background-image: url('./assets/closing-cartoon.webp');
   background-size: cover;
   background-position: right center;
   opacity: 0.76;
@@ -1918,3 +1918,4 @@ body.opening-complete::after {
   object-fit: cover;
   filter: saturate(0.98) contrast(1.02);
 }
+

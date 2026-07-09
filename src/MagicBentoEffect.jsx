@@ -10,6 +10,7 @@ const TARGET_SELECTOR = [
   '.timeline div',
   '.project-card',
   '.strength-card',
+  '.result-strip',
   '.skill-ribbon span',
   '.contact-lines a',
 ].join(',')
@@ -23,6 +24,7 @@ const MOTION_TARGETS = [
   '.timeline div',
   '.project-card',
   '.strength-card',
+  '.result-strip',
   '.skill-ribbon span',
   '.closing .eyebrow',
   '.closing h2',
@@ -204,6 +206,8 @@ export default function MagicBentoEffect() {
 
   return null
 }
+
+
 
 
 
